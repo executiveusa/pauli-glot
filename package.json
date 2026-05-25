@@ -1,0 +1,37 @@
+{
+  "name": "pauli-glot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && prisma generate",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:push": "prisma db push",
+    "prisma:generate": "prisma generate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:38865/git/executiveusa/pauli-glot"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.15",
+    "autoprefixer": "^10.5.0",
+    "dotenv": "^17.4.2",
+    "next": "^16.2.6",
+    "openai": "^6.39.0",
+    "postcss": "^8.5.15",
+    "prisma": "^7.8.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
+  }
+}
