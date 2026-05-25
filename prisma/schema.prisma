@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  profile         LearnerProfile?
+  state           LearnerState?
+  uploadedAssets  UploadedAsset[]
+  storySessions   StorySession[]
+  voiceSessions   VoiceSession[]
+  srsItems        SRSItem[]
+  reviews         ReviewEvent[]
+}
+
+model LearnerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  nativeLanguage    String   @default("English")
+  targetDialect     String   @default("Mexican Spanish")
+  preferredTopics   String   @default("travel,work,culture") // JSON string
+  anxietyLevel      Int      @default(5)
+  correctionPreference String @default("gentle")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LearnerState {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  knownWords        String   @default("") // JSON array as string
+  knownStructures   String   @default("")
+  emergingStructures String  @default("")
+  fossilizedErrors  String   @default("")
+  comprehensionScore Float   @default(0.0)
+  speakingConfidence Float   @default(0.0)
+  listeningConfidence Float  @default(0.0)
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UploadedAsset {
+  id            String   @id @default(cuid())
+  userId        String
+  fileName      String
+  fileType      String
+  originalUrl   String?
+  storagePath   String?
+  extractedText String?
+  createdAt     DateTime @default(now())
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks      AssetChunk[]
+}
+
+model AssetChunk {
+  id            String   @id @default(cuid())
+  assetId       String
+  chunkIndex    Int
+  content       String
+  embedding     String?
+  difficulty    String   @default("A2")
+  detectedDialect String @default("Mexican")
+  createdAt     DateTime @default(now())
+
+  asset         UploadedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+model StoryModule {
+  id                String   @id @default(cuid())
+  title             String
+  phaseA            String
+  phaseB            String
+  phaseC            String
+  targetStructures  String   @default("") // JSON string
+  knownVocabPct     Float    @default(0.85)
+  unknownVocabPct   Float    @default(0.15)
+  personalizedFor   String?
+  contentSource     String?
+  difficulty        String   @default("A2")
+  createdAt         DateTime @default(now())
+
+  sessions          StorySession[]
+  corrections       CorrectionEvent[]
+}
+
+model StorySession {
+  id                String   @id @default(cuid())
+  userId            String
+  storyModuleId     String
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  phaseAComprehension Float?
+  phaseBUnderstanding Float?
+  phaseCResponses   String?  // JSON string
+  userFeedback      String?
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyModule       StoryModule   @relation(fields: [storyModuleId], references: [id])
+}
+
+model TargetStructure {
+  id              String   @id @default(cuid())
+  name            String
+  explanation     String
+  mexSpanishExample String
+  englishTranslation String
+  difficulty      String   @default("A2")
+  createdAt       DateTime @default(now())
+}
+
+model VoiceSession {
+  id          String   @id @default(cuid())
+  userId      String
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  transcript  String?
+  correctionSummary String?
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turns       VoiceTurn[]
+  corrections CorrectionEvent[]
+}
+
+model VoiceTurn {
+  id              String   @id @default(cuid())
+  voiceSessionId  String
+  userSpeech      String
+  userAudio       String?
+  tutorResponse   String
+  tutorAudio      String?
+  errorDetected   Boolean  @default(false)
+  errorType       String?
+  errorNote       String?
+  timestamp       DateTime @default(now())
+
+  voiceSession    VoiceSession @relation(fields: [voiceSessionId], references: [id], onDelete: Cascade)
+}
+
+model CorrectionEvent {
+  id              String   @id @default(cuid())
+  userId          String?
+  storyModuleId   String?
+  voiceSessionId  String?
+  errorContent    String
+  errorType       String
+  correctionNote  String
+  recurringError  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  storyModule     StoryModule?  @relation(fields: [storyModuleId], references: [id])
+  voiceSession    VoiceSession? @relation(fields: [voiceSessionId], references: [id])
+}
+
+model SRSItem {
+  id              String   @id @default(cuid())
+  userId          String
+  itemType        String
+  content         String
+  answer          String?
+  sourceStory     String?
+  sourceError     String?
+
+  difficulty      Float   @default(5.0)
+  stability       Float   @default(0.0)
+  retrievability  Float   @default(1.0)
+  nextReviewAt    DateTime @default(now())
+  lastReviewAt    DateTime?
+  reviewCount     Int     @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews         ReviewEvent[]
+}
+
+model ReviewEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  srsItemId       String
+  rating          Int
+  responseTime    Int?
+  response        String?
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  srsItem         SRSItem  @relation(fields: [srsItemId], references: [id], onDelete: Cascade)
+}
