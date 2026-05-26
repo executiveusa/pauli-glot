@@ -85,6 +85,13 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-600">Begin Phase A: Learn through story</p>
               </Link>
               <Link
+                href="/upload"
+                className="block p-4 bg-gradient-to-r from-green-50 to-teal-50 border-l-4 border-green-500 rounded hover:shadow transition"
+              >
+                <h4 className="font-bold text-gray-900">Upload Your Content</h4>
+                <p className="text-sm text-gray-600">Add PDFs, subtitles, or transcripts to personalize lessons via RAG</p>
+              </Link>
+              <Link
                 href="/review"
                 className="block p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-l-4 border-indigo-500 rounded hover:shadow transition"
               >

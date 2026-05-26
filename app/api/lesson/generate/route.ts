@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateStory } from '@/lib/ai/story-generator';
 import { scoreComprehensibility } from '@/lib/ai/comprehensibility-scorer';
+import { buildContext } from '@/lib/rag/search';
 import { prisma } from '@/lib/db/prisma';
 
 export async function POST(request: NextRequest) {
@@ -20,11 +21,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate story using OpenAI
+    // Pull relevant content from learner's uploaded materials
+    const ragQuery = [
+      ...(targetStructures ?? []),
+      personalizedContext ?? '',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    let ragContext: string | undefined;
+    try {
+      ragContext = await buildContext(ragQuery, userId, 3) || undefined;
+    } catch {
+      // RAG is optional — continue without it if embeddings aren't ready
+    }
+
+    // Generate story using OpenAI (with RAG context if available)
     const story = await generateStory({
       learnerLevel,
       targetStructures,
       personalizedContext,
+      ragContext,
       tone: 'conversational',
     });
 
