@@ -8,6 +8,7 @@ export interface StoryGeneratorInput {
   learnerLevel: string; // A1, A2, B1, B2
   targetStructures: string[]; // Grammar structures to teach
   personalizedContext?: string; // User interests, background
+  ragContext?: string; // Retrieved chunks from uploaded materials
   knownVocabulary?: string[];
   tone?: 'humorous' | 'serious' | 'conversational';
 }
@@ -82,6 +83,16 @@ ${input.targetStructures.map(s => `- ${s}`).join('\n')}
 ${input.personalizedContext ? `Learner context: ${input.personalizedContext}` : ''}
 
 ${input.knownVocabulary ? `Known vocabulary (sample): ${input.knownVocabulary.slice(0, 20).join(', ')}` : ''}
+
+${
+  input.ragContext
+    ? `The learner has uploaded the following Spanish materials. Use vocabulary, themes, and settings from these excerpts to personalize the story — but adapt the language to the target CEFR level:
+
+--- LEARNER'S UPLOADED CONTENT ---
+${input.ragContext}
+--- END OF CONTENT ---`
+    : ''
+}
 
 Tone: ${input.tone || 'conversational'}
 
