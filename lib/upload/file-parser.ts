@@ -58,7 +58,8 @@ async function extractPDF(buffer: Buffer): Promise<ParsedContent> {
 
 function extractSRT(raw: string): ParsedContent {
   const segments: SubtitleSegment[] = [];
-  const blocks = raw.trim().split(/\n\n+/);
+  const normalized = raw.replace(/\r\n/g, '\n');
+  const blocks = normalized.trim().split(/\n\n+/);
 
   for (const block of blocks) {
     const lines = block.trim().split('\n');
@@ -90,8 +91,9 @@ function extractSRT(raw: string): ParsedContent {
 
 function extractVTT(raw: string): ParsedContent {
   const segments: SubtitleSegment[] = [];
-  // Strip WEBVTT header
-  const body = raw.replace(/^WEBVTT.*?\n\n/s, '');
+  // Normalize line endings and strip WEBVTT header
+  const normalized = raw.replace(/\r\n/g, '\n');
+  const body = normalized.replace(/^WEBVTT.*?\n\n/s, '');
   const blocks = body.trim().split(/\n\n+/);
 
   for (const block of blocks) {
