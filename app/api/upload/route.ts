@@ -46,6 +46,16 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Ensure user exists before creating asset
+    await prisma.user.upsert({
+      where: { email: `${userId}@local` },
+      update: {},
+      create: {
+        email: `${userId}@local`,
+        name: userId,
+      },
+    });
+
     // Extract text from the file
     const parsed = await extractText(buffer, file.type, fileName);
 
