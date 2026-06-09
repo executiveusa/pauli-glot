@@ -55,6 +55,8 @@ export async function GET(request: NextRequest) {
         id: item.id,
         itemType: item.itemType,
         content: item.content,
+        answer: item.answer,
+        sourceStory: item.sourceStory,
         difficulty: item.difficulty,
       })),
       schedule: {
