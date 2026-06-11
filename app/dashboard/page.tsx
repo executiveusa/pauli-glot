@@ -22,15 +22,19 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch real stats from API
-    setStats({
-      completedLessons: 3,
-      dueReviews: 12,
-      thisWeekProgress: 45,
-      totalStructuresLearned: 18,
-      averageComprehension: 0.82,
-    });
-    setLoading(false);
+    fetch('/api/dashboard/stats?userId=demo-user')
+      .then(r => r.json())
+      .then(data => {
+        setStats({
+          completedLessons: data.completedLessons ?? 0,
+          dueReviews: data.dueReviews ?? 0,
+          thisWeekProgress: data.thisWeekProgress ?? 0,
+          totalStructuresLearned: data.totalStructuresLearned ?? 0,
+          averageComprehension: data.averageComprehension ?? 0,
+        });
+      })
+      .catch(() => {/* keep zeros on error */})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -68,7 +72,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-gray-600 text-sm font-semibold">Comprehension</p>
             <p className="text-3xl font-bold text-orange-600">
-              {Math.round(stats.averageComprehension * 100)}%
+              {stats.averageComprehension}%
             </p>
           </div>
         </div>

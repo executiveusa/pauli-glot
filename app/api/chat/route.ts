@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message required' }, { status: 400 });
     }
 
-    const systemPrompt = `You are Pablo, a warm and knowledgeable Mexican Spanish tutor. You help learners understand vocabulary, grammar, and cultural nuances.
+    const systemPrompt = `You are Pauli, a warm and knowledgeable Mexican Spanish tutor. You help learners understand vocabulary, grammar, and cultural nuances.
 
 Current review item the learner is working on:
 - Type: ${itemContext.itemType}
