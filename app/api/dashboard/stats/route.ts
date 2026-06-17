@@ -46,11 +46,12 @@ export async function GET(request: NextRequest) {
         ? Math.round((weeklyReviews / weeklyDenominator) * 100)
         : 0;
 
-    const averageComprehension = learnerState?.comprehensionScore
-      ? Math.round(learnerState.comprehensionScore * 100)
-      : totalItems > 0
-      ? Math.round((reviewedItems / totalItems) * 100)
-      : 0;
+    const averageComprehension =
+      learnerState?.comprehensionScore != null
+        ? Math.round(learnerState.comprehensionScore * 100)
+        : totalItems > 0
+        ? Math.round((reviewedItems / totalItems) * 100)
+        : 0;
 
     return NextResponse.json({
       completedLessons,

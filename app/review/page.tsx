@@ -495,17 +495,17 @@ export default function ReviewPage() {
             {currentItem.content}
           </p>
 
-          {currentItem.answer && (
-            <p className="mt-3 text-sm text-gray-500">
-              <span className="font-medium text-gray-700">Answer:</span> {currentItem.answer}
-            </p>
-          )}
         </div>
 
         {/* Feedback or rating */}
         {feedback ? (
           <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-xl">
             <p className="text-gray-800 font-semibold">{feedback.text}</p>
+            {currentItem.answer && (
+              <p className="mt-2 text-sm text-gray-600">
+                <span className="font-medium">Answer:</span> {currentItem.answer}
+              </p>
+            )}
             {feedback.nextReviewAt && (
               <p className="text-sm text-gray-500 mt-1">
                 Next review: {new Date(feedback.nextReviewAt).toLocaleDateString()}
