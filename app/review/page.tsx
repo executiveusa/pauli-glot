@@ -173,6 +173,7 @@ function ChatPanel({
           history: messages,
         }),
       });
+      if (!res.ok) throw new Error(`Chat API ${res.status}`);
       const data = await res.json();
       setMessages([...next, { role: 'assistant', content: data.reply ?? 'Lo siento, algo salió mal.' }]);
     } catch {
@@ -208,8 +209,8 @@ function ChatPanel({
               P
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-sm leading-tight">Pablo</p>
-              <p className="text-xs text-gray-400">Your Spanish tutor · always here</p>
+              <p className="font-semibold text-gray-900 text-sm leading-tight">Pauli</p>
+              <p className="text-xs text-gray-400">Your Spanish tutor · ask me anything</p>
             </div>
           </div>
           <button
@@ -239,7 +240,7 @@ function ChatPanel({
           {messages.length === 0 && (
             <div className="text-center py-6">
               <p className="text-gray-500 text-sm mb-4">
-                ¡Hola! Ask me anything about this word or phrase.
+                ¡Hola! I'm Pauli. Ask me anything about this word or phrase.
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.map(s => (
@@ -306,7 +307,7 @@ function ChatPanel({
                 sendMessage();
               }
             }}
-            placeholder="Ask Pablo anything…"
+            placeholder="Ask Pauli…"
             className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50"
           />
           <button
@@ -442,7 +443,7 @@ export default function ReviewPage() {
             ← Dashboard
           </Link>
           <h1 className="text-base font-bold text-gray-900">Spaced Repetition Review</h1>
-          {/* "Ask Pablo" toggle */}
+          {/* "Ask Pauli" toggle */}
           <button
             onClick={() => setChatOpen(v => !v)}
             className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -450,7 +451,7 @@ export default function ReviewPage() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            Ask Pablo
+            Ask Pauli
           </button>
         </div>
       </header>
@@ -494,17 +495,17 @@ export default function ReviewPage() {
             {currentItem.content}
           </p>
 
-          {currentItem.answer && (
-            <p className="mt-3 text-sm text-gray-500">
-              <span className="font-medium text-gray-700">Answer:</span> {currentItem.answer}
-            </p>
-          )}
         </div>
 
         {/* Feedback or rating */}
         {feedback ? (
           <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-xl">
             <p className="text-gray-800 font-semibold">{feedback.text}</p>
+            {currentItem.answer && (
+              <p className="mt-2 text-sm text-gray-600">
+                <span className="font-medium">Answer:</span> {currentItem.answer}
+              </p>
+            )}
             {feedback.nextReviewAt && (
               <p className="text-sm text-gray-500 mt-1">
                 Next review: {new Date(feedback.nextReviewAt).toLocaleDateString()}
@@ -544,7 +545,7 @@ export default function ReviewPage() {
         )}
       </main>
 
-      {/* Floating "Ask Pablo" button (visible when chat is closed) */}
+      {/* Floating "Ask Pauli" button (visible when chat is closed) */}
       {!chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
@@ -553,7 +554,7 @@ export default function ReviewPage() {
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          <span className="text-sm font-semibold">Ask Pablo</span>
+          <span className="text-sm font-semibold">Ask Pauli</span>
         </button>
       )}
 
