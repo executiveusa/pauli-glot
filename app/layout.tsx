@@ -1,19 +1,18 @@
+import { ClerkProvider, UserButton } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'AcquisitionOS - Mexican Spanish',
+  title: 'Pauli — Learn Mexican Spanish',
   description: 'Learn Mexican Spanish through comprehensible input and TPRS',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-50">{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className="bg-slate-50">{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

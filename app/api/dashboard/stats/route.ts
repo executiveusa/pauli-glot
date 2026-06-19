@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import { getOrCreateUser } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId') || 'demo-user';
+export async function GET() {
+  const user = await getOrCreateUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const now = new Date();
@@ -17,29 +20,22 @@ export async function GET(request: NextRequest) {
       reviewedItems,
       learnerState,
     ] = await Promise.all([
-      // Completed story sessions
       prisma.storySession.count({
-        where: { userId, completedAt: { not: null } },
+        where: { userId: user.id, completedAt: { not: null } },
       }),
-      // Items currently due
       prisma.sRSItem.count({
-        where: { userId, nextReviewAt: { lte: now } },
+        where: { userId: user.id, nextReviewAt: { lte: now } },
       }),
-      // Review events in the last 7 days
       prisma.reviewEvent.count({
-        where: { userId, createdAt: { gte: weekAgo } },
+        where: { userId: user.id, createdAt: { gte: weekAgo } },
       }),
-      // Total SRS items
-      prisma.sRSItem.count({ where: { userId } }),
-      // Items reviewed at least once (= learned)
+      prisma.sRSItem.count({ where: { userId: user.id } }),
       prisma.sRSItem.count({
-        where: { userId, reviewCount: { gt: 0 } },
+        where: { userId: user.id, reviewCount: { gt: 0 } },
       }),
-      // Learner state for comprehension score
-      prisma.learnerState.findUnique({ where: { userId } }),
+      prisma.learnerState.findUnique({ where: { userId: user.id } }),
     ]);
 
-    // Weekly progress = reviews done this week / (reviews + remaining due) as %
     const weeklyDenominator = weeklyReviews + dueReviews;
     const thisWeekProgress =
       weeklyDenominator > 0
@@ -61,10 +57,7 @@ export async function GET(request: NextRequest) {
       averageComprehension,
     });
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch stats' },
-      { status: 500 }
-    );
+    console.error('[dashboard/stats]', error);
+    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
   }
 }
