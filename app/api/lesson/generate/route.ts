@@ -3,15 +3,29 @@ import { generateStory } from '@/lib/ai/story-generator';
 import { scoreComprehensibility } from '@/lib/ai/comprehensibility-scorer';
 import { buildContext } from '@/lib/rag/search';
 import { prisma } from '@/lib/db/prisma';
+import { getOrCreateUser } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const user = await getOrCreateUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { allowed } = checkRateLimit(`lesson:${user.id}`, 10, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit reached. Max 10 lessons per hour.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const {
       learnerLevel = 'A2',
       targetStructures = ['tener que + infinitive', 'ir + a'],
       personalizedContext,
-      userId = 'demo-user',
     } = body;
 
     if (!targetStructures || targetStructures.length === 0) {
@@ -21,22 +35,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Pull relevant content from learner's uploaded materials
-    const ragQuery = [
-      ...(targetStructures ?? []),
-      personalizedContext ?? '',
-    ]
+    const ragQuery = [...(targetStructures ?? []), personalizedContext ?? '']
       .filter(Boolean)
       .join(', ');
 
     let ragContext: string | undefined;
     try {
-      ragContext = await buildContext(ragQuery, userId, 3) || undefined;
+      ragContext = (await buildContext(ragQuery, user.id, 3)) || undefined;
     } catch {
-      // RAG is optional — continue without it if embeddings aren't ready
+      // RAG is optional
     }
 
-    // Generate story using OpenAI (with RAG context if available)
     const story = await generateStory({
       learnerLevel,
       targetStructures,
@@ -45,32 +54,30 @@ export async function POST(request: NextRequest) {
       tone: 'conversational',
     });
 
-    // Score comprehensibility of Phase A
     const comprehensibilityScore = await scoreComprehensibility(
       story.phaseA,
       learnerLevel,
       personalizedContext
     );
 
-    if (!comprehensibilityScore.isComprehensible) {
-      // If not comprehensible enough, we could regenerate, but for MVP, warn the user
-      console.warn('Generated story may not be comprehensible enough:', comprehensibilityScore);
-    }
-
-    // Save to database
     const storyModule = await prisma.storyModule.create({
       data: {
         title: `Lesson: ${targetStructures.join(', ')}`,
         phaseA: story.phaseA,
         phaseB: story.phaseB,
         phaseC: story.phaseC,
-        targetStructures,
+        targetStructures: JSON.stringify(targetStructures),
         knownVocabPct: comprehensibilityScore.knownVocabPercentage,
         unknownVocabPct: comprehensibilityScore.unknownVocabPercentage,
         difficulty: learnerLevel,
         contentSource: 'generated',
-        personalizedFor: personalizedContext ? userId : undefined,
+        personalizedFor: personalizedContext ? user.id : undefined,
       },
+    });
+
+    // Create a story session to track lesson progress
+    await prisma.storySession.create({
+      data: { userId: user.id, storyModuleId: storyModule.id },
     });
 
     return NextResponse.json({
@@ -81,7 +88,7 @@ export async function POST(request: NextRequest) {
         phaseA: storyModule.phaseA,
         phaseB: storyModule.phaseB,
         phaseC: storyModule.phaseC,
-        targetStructures: storyModule.targetStructures,
+        targetStructures: JSON.parse(storyModule.targetStructures || '[]'),
         difficulty: storyModule.difficulty,
         comprehensibilityScore: {
           overallScore: comprehensibilityScore.overallScore,
@@ -91,7 +98,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error generating lesson:', error);
+    console.error('[lesson/generate]', error);
     return NextResponse.json(
       { error: 'Failed to generate lesson. Please check your API key.' },
       { status: 500 }

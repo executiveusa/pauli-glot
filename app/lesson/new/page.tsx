@@ -54,7 +54,6 @@ export default function NewLessonPage() {
           learnerLevel: 'A2',
           targetStructures: selectedStructures,
           personalizedContext: personalContext || undefined,
-          userId: 'demo-user',
         }),
       });
 

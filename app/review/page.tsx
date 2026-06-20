@@ -345,12 +345,10 @@ export default function ReviewPage() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const userId = 'demo-user';
-
   useEffect(() => {
     async function fetchDueItems() {
       try {
-        const response = await fetch(`/api/review/due?userId=${userId}&limit=20`);
+        const response = await fetch('/api/review/due?limit=20');
         if (!response.ok) throw new Error('Failed to fetch due items');
         const result = await response.json();
         setData(result);
@@ -361,7 +359,7 @@ export default function ReviewPage() {
       }
     }
     fetchDueItems();
-  }, [userId]);
+  }, []);
 
   const handleRate = async (rating: 1 | 2 | 3 | 4) => {
     if (!data || !data.dueItems[currentIndex]) return;
@@ -372,7 +370,7 @@ export default function ReviewPage() {
       const response = await fetch('/api/review/grade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ srsItemId: item.id, userId, rating, responseTime: 5000 }),
+        body: JSON.stringify({ srsItemId: item.id, rating, responseTime: 5000 }),
       });
       if (!response.ok) throw new Error('Failed to grade review');
       const result = await response.json();

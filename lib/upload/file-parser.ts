@@ -44,7 +44,9 @@ export async function extractText(
 async function extractPDF(buffer: Buffer): Promise<ParsedContent> {
   try {
     // Dynamically import pdf-parse (CommonJS module)
-    const pdfParse = (await import('pdf-parse')).default;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod = await import('pdf-parse') as any;
+    const pdfParse = mod.default ?? mod;
     const data = await pdfParse(buffer);
     return {
       text: data.text.replace(/\s+/g, ' ').trim(),

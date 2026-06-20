@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { UserButton } from '@clerk/nextjs';
 
 interface Stats {
   completedLessons: number;
@@ -22,7 +23,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/dashboard/stats?userId=demo-user')
+    fetch('/api/dashboard/stats')
       .then(r => r.json())
       .then(data => {
         setStats({
@@ -42,9 +43,10 @@ export default function Dashboard() {
       <header className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">AcquisitionOS</h1>
-          <nav className="space-x-4">
+          <nav className="flex items-center space-x-4">
             <Link href="/" className="text-gray-600 hover:text-gray-900">Home</Link>
             <Link href="/dashboard" className="text-blue-600 font-bold">Dashboard</Link>
+            <UserButton />
           </nav>
         </div>
       </header>

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { getOrCreateUser } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -16,6 +18,19 @@ interface ItemContext {
 }
 
 export async function POST(request: NextRequest) {
+  const user = await getOrCreateUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { allowed } = checkRateLimit(`chat:${user.id}`, 60, 60 * 60 * 1000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit reached. Max 60 messages per hour.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const { message, itemContext, history } = (await request.json()) as {
       message: string;
@@ -23,8 +38,8 @@ export async function POST(request: NextRequest) {
       history: ChatMessage[];
     };
 
-    if (!message?.trim()) {
-      return NextResponse.json({ error: 'Message required' }, { status: 400 });
+    if (!message?.trim() || message.length > 2000) {
+      return NextResponse.json({ error: 'Message must be 1–2000 characters' }, { status: 400 });
     }
 
     const systemPrompt = `You are Pauli, a warm and knowledgeable Mexican Spanish tutor. You help learners understand vocabulary, grammar, and cultural nuances.
@@ -40,7 +55,6 @@ Your style:
 - Use Mexican Spanish examples (tú form, no vosotros)
 - For vocabulary: give meaning, 1 example sentence (Spanish + English), a memory tip if useful
 - For grammar: explain the pattern with a simple example from everyday life
-- For cultural notes: be specific to Mexico/Latin America
 - Occasionally sprinkle a light Spanish phrase naturally (e.g., "¡Exacto!", "Muy bien")`;
 
     const completion = await openai.chat.completions.create({
@@ -57,7 +71,7 @@ Your style:
     const reply = completion.choices[0].message.content ?? '';
     return NextResponse.json({ reply });
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.error('[chat]', error);
     return NextResponse.json({ error: 'Failed to get response' }, { status: 500 });
   }
 }

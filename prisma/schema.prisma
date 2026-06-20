@@ -3,52 +3,60 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
+  id        String   @id @default(cuid())
+  clerkId   String?  @unique
+  email     String   @unique
   name      String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  profile         LearnerProfile?
-  state           LearnerState?
-  uploadedAssets  UploadedAsset[]
-  storySessions   StorySession[]
-  voiceSessions   VoiceSession[]
-  srsItems        SRSItem[]
-  reviews         ReviewEvent[]
+  profile       LearnerProfile?
+  state         LearnerState?
+  uploadedAssets UploadedAsset[]
+  storySessions  StorySession[]
+  voiceSessions  VoiceSession[]
+  srsItems       SRSItem[]
+  reviews        ReviewEvent[]
+
+  @@map("pauli_user")
 }
 
 model LearnerProfile {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  nativeLanguage    String   @default("English")
-  targetDialect     String   @default("Mexican Spanish")
-  preferredTopics   String   @default("travel,work,culture") // JSON string
-  anxietyLevel      Int      @default(5)
-  correctionPreference String @default("gentle")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  nativeLanguage       String   @default("English")
+  targetDialect        String   @default("Mexican Spanish")
+  preferredTopics      String   @default("travel,work,culture")
+  anxietyLevel         Int      @default(5)
+  correctionPreference String   @default("gentle")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("pauli_learner_profile")
 }
 
 model LearnerState {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  knownWords        String   @default("") // JSON array as string
-  knownStructures   String   @default("")
-  emergingStructures String  @default("")
-  fossilizedErrors  String   @default("")
-  comprehensionScore Float   @default(0.0)
-  speakingConfidence Float   @default(0.0)
-  listeningConfidence Float  @default(0.0)
-  updatedAt         DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  knownWords          String   @default("")
+  knownStructures     String   @default("")
+  emergingStructures  String   @default("")
+  fossilizedErrors    String   @default("")
+  comprehensionScore  Float    @default(0.0)
+  speakingConfidence  Float    @default(0.0)
+  listeningConfidence Float    @default(0.0)
+  updatedAt           DateTime @updatedAt
 
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pauli_learner_state")
 }
 
 model UploadedAsset {
@@ -61,141 +69,170 @@ model UploadedAsset {
   extractedText String?
   createdAt     DateTime @default(now())
 
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chunks      AssetChunk[]
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks AssetChunk[]
+
+  @@index([userId])
+  @@map("pauli_uploaded_asset")
 }
 
 model AssetChunk {
-  id            String   @id @default(cuid())
-  assetId       String
-  chunkIndex    Int
-  content       String
-  embedding     String?
-  difficulty    String   @default("A2")
-  detectedDialect String @default("Mexican")
-  createdAt     DateTime @default(now())
+  id             String   @id @default(cuid())
+  assetId        String
+  chunkIndex     Int
+  content        String
+  embedding      String?
+  difficulty     String   @default("A2")
+  detectedDialect String  @default("Mexican")
+  createdAt      DateTime @default(now())
 
-  asset         UploadedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset UploadedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@map("pauli_asset_chunk")
 }
 
 model StoryModule {
-  id                String   @id @default(cuid())
-  title             String
-  phaseA            String
-  phaseB            String
-  phaseC            String
-  targetStructures  String   @default("") // JSON string
-  knownVocabPct     Float    @default(0.85)
-  unknownVocabPct   Float    @default(0.15)
-  personalizedFor   String?
-  contentSource     String?
-  difficulty        String   @default("A2")
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  title            String
+  phaseA           String
+  phaseB           String
+  phaseC           String
+  targetStructures String   @default("")
+  knownVocabPct    Float    @default(0.85)
+  unknownVocabPct  Float    @default(0.15)
+  personalizedFor  String?
+  contentSource    String?
+  difficulty       String   @default("A2")
+  createdAt        DateTime @default(now())
 
-  sessions          StorySession[]
-  corrections       CorrectionEvent[]
+  sessions    StorySession[]
+  corrections CorrectionEvent[]
+
+  @@map("pauli_story_module")
 }
 
 model StorySession {
-  id                String   @id @default(cuid())
-  userId            String
-  storyModuleId     String
-  startedAt         DateTime @default(now())
-  completedAt       DateTime?
+  id                  String    @id @default(cuid())
+  userId              String
+  storyModuleId       String
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
   phaseAComprehension Float?
   phaseBUnderstanding Float?
-  phaseCResponses   String?  // JSON string
-  userFeedback      String?
+  phaseCResponses     String?
+  userFeedback        String?
 
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storyModule       StoryModule   @relation(fields: [storyModuleId], references: [id])
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyModule StoryModule @relation(fields: [storyModuleId], references: [id])
+
+  @@index([userId])
+  @@index([storyModuleId])
+  @@map("pauli_story_session")
 }
 
 model TargetStructure {
-  id              String   @id @default(cuid())
-  name            String
-  explanation     String
-  mexSpanishExample String
+  id                 String   @id @default(cuid())
+  name               String
+  explanation        String
+  mexSpanishExample  String
   englishTranslation String
-  difficulty      String   @default("A2")
-  createdAt       DateTime @default(now())
+  difficulty         String   @default("A2")
+  createdAt          DateTime @default(now())
+
+  @@map("pauli_target_structure")
 }
 
 model VoiceSession {
-  id          String   @id @default(cuid())
-  userId      String
-  startedAt   DateTime @default(now())
-  endedAt     DateTime?
-  transcript  String?
+  id                String    @id @default(cuid())
+  userId            String
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  transcript        String?
   correctionSummary String?
 
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   turns       VoiceTurn[]
   corrections CorrectionEvent[]
+
+  @@index([userId])
+  @@map("pauli_voice_session")
 }
 
 model VoiceTurn {
-  id              String   @id @default(cuid())
-  voiceSessionId  String
-  userSpeech      String
-  userAudio       String?
-  tutorResponse   String
-  tutorAudio      String?
-  errorDetected   Boolean  @default(false)
-  errorType       String?
-  errorNote       String?
-  timestamp       DateTime @default(now())
+  id             String   @id @default(cuid())
+  voiceSessionId String
+  userSpeech     String
+  userAudio      String?
+  tutorResponse  String
+  tutorAudio     String?
+  errorDetected  Boolean  @default(false)
+  errorType      String?
+  errorNote      String?
+  timestamp      DateTime @default(now())
 
-  voiceSession    VoiceSession @relation(fields: [voiceSessionId], references: [id], onDelete: Cascade)
+  voiceSession VoiceSession @relation(fields: [voiceSessionId], references: [id], onDelete: Cascade)
+
+  @@index([voiceSessionId])
+  @@map("pauli_voice_turn")
 }
 
 model CorrectionEvent {
-  id              String   @id @default(cuid())
-  userId          String?
-  storyModuleId   String?
-  voiceSessionId  String?
-  errorContent    String
-  errorType       String
-  correctionNote  String
-  recurringError  Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String?
+  storyModuleId  String?
+  voiceSessionId String?
+  errorContent   String
+  errorType      String
+  correctionNote String
+  recurringError Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
-  storyModule     StoryModule?  @relation(fields: [storyModuleId], references: [id])
-  voiceSession    VoiceSession? @relation(fields: [voiceSessionId], references: [id])
+  storyModule  StoryModule?  @relation(fields: [storyModuleId], references: [id])
+  voiceSession VoiceSession? @relation(fields: [voiceSessionId], references: [id])
+
+  @@map("pauli_correction_event")
 }
 
 model SRSItem {
-  id              String   @id @default(cuid())
-  userId          String
-  itemType        String
-  content         String
-  answer          String?
-  sourceStory     String?
-  sourceError     String?
+  id            String    @id @default(cuid())
+  userId        String
+  itemType      String
+  content       String
+  answer        String?
+  sourceStory   String?
+  sourceError   String?
+  difficulty    Float     @default(5.0)
+  stability     Float     @default(0.0)
+  retrievability Float    @default(1.0)
+  nextReviewAt  DateTime  @default(now())
+  lastReviewAt  DateTime?
+  reviewCount   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  difficulty      Float   @default(5.0)
-  stability       Float   @default(0.0)
-  retrievability  Float   @default(1.0)
-  nextReviewAt    DateTime @default(now())
-  lastReviewAt    DateTime?
-  reviewCount     Int     @default(0)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews ReviewEvent[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviews         ReviewEvent[]
+  @@index([userId])
+  @@index([userId, nextReviewAt])
+  @@map("pauli_srs_item")
 }
 
 model ReviewEvent {
-  id              String   @id @default(cuid())
-  userId          String
-  srsItemId       String
-  rating          Int
-  responseTime    Int?
-  response        String?
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  srsItemId    String
+  rating       Int
+  responseTime Int?
+  response     String?
+  createdAt    DateTime @default(now())
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  srsItem         SRSItem  @relation(fields: [srsItemId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  srsItem SRSItem @relation(fields: [srsItemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([srsItemId])
+  @@index([userId, createdAt])
+  @@map("pauli_review_event")
 }
