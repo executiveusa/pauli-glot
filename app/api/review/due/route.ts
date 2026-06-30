@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getOrCreateUser } from '@/lib/auth';
+import type { SRSItem } from '@prisma/client';
 
 export async function GET() {
   const user = await getOrCreateUser();
@@ -43,7 +44,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      dueItems: dueItems.map(item => ({
+      dueItems: dueItems.map((item: SRSItem) => ({
         id: item.id,
         itemType: item.itemType,
         content: item.content,

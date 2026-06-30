@@ -1,6 +1,4 @@
-import OpenAI from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { getOpenAI } from '@/lib/openai';
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const BATCH_SIZE = 20; // embed up to 20 chunks per API call
@@ -15,7 +13,7 @@ export async function embedChunks(
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE);
 
-    const response = await openai.embeddings.create({
+    const response = await getOpenAI().embeddings.create({
       model: EMBEDDING_MODEL,
       input: batch,
     });
@@ -29,7 +27,7 @@ export async function embedChunks(
 }
 
 export async function embedQuery(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
+  const response = await getOpenAI().embeddings.create({
     model: EMBEDDING_MODEL,
     input: text,
   });
