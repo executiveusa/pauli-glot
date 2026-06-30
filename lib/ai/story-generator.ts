@@ -1,8 +1,4 @@
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getOpenAI } from '@/lib/openai';
 
 export interface StoryGeneratorInput {
   learnerLevel: string; // A1, A2, B1, B2
@@ -98,7 +94,7 @@ Tone: ${input.tone || 'conversational'}
 
 Create a story that teaches these structures naturally through an engaging narrative. Remember: the learner should understand the story before seeing any grammar explanation.`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {
@@ -143,7 +139,7 @@ export async function analyzeComprehensibility(text: string): Promise<{
   newStructures: string[];
   mexicanSpanishScore: number;
 }> {
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {

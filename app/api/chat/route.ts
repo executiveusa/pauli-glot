@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { getOrCreateUser } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { getOpenAI } from '@/lib/openai';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -57,7 +55,7 @@ Your style:
 - For grammar: explain the pattern with a simple example from everyday life
 - Occasionally sprinkle a light Spanish phrase naturally (e.g., "¡Exacto!", "Muy bien")`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },

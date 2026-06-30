@@ -1,8 +1,4 @@
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getOpenAI } from '@/lib/openai';
 
 export interface ComprehensibilityScore {
   overallScore: number; // 0-100
@@ -48,7 +44,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
   "recommendations": ["recommendation 1", "recommendation 2"]
 }`;
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {
