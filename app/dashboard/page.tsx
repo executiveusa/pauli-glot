@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
 
 interface Stats {
   completedLessons: number;
@@ -46,7 +45,6 @@ export default function Dashboard() {
           <nav className="flex items-center space-x-4">
             <Link href="/" className="text-gray-600 hover:text-gray-900">Home</Link>
             <Link href="/dashboard" className="text-blue-600 font-bold">Dashboard</Link>
-            <UserButton />
           </nav>
         </div>
       </header>
