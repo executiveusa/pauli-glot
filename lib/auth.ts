@@ -1,28 +1,17 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/db/prisma';
+// Auth disabled for development
+// TODO: Re-enable Clerk authentication when CLERK_SECRET_KEY is configured
 
 /**
- * Returns the DB User record for the currently authenticated Clerk session,
- * creating it on first sign-in. Returns null if the request is unauthenticated.
+ * Returns a demo user for development
  */
 export async function getOrCreateUser() {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) return null;
-
-  const existing = await prisma.user.findUnique({ where: { clerkId } });
-  if (existing) return existing;
-
-  const clerkUser = await currentUser();
-  const email =
-    clerkUser?.emailAddresses?.[0]?.emailAddress ?? `${clerkId}@pauli.app`;
-
-  return prisma.user.upsert({
-    where: { email },
-    update: { clerkId },
-    create: {
-      clerkId,
-      email,
-      name: clerkUser?.fullName ?? undefined,
-    },
-  });
+  // Return demo user during development
+  return {
+    id: 'demo-user-1',
+    email: 'demo@pauli.app',
+    name: 'Demo User',
+    clerkId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 }
