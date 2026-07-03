@@ -1,5 +1,11 @@
+import { NextRequest, NextResponse } from 'next/server';
+
 // Middleware disabled for development
 // TODO: Re-enable Clerk authentication when environment variables are configured
+export function middleware(request: NextRequest) {
+  // Pass through all requests during development
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
